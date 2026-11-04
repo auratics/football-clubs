@@ -2,7 +2,7 @@
 // Kurulumdan sonra kulüpler /admin panelinden güncellenir (bu dosyayı değiştirmek mevcut veritabanını etkilemez,
 // lig adları hariç). cc = bayrak kodu (https://flagcdn.com).
 // Kaynak: Wikipedia sezon sayfaları, Kasım 2026 (2026/27 ya da takvim yılına göre 2026 sezonu).
-export const LEAGUES = [
+const ALL_LEAGUES = [
   // ---------------- ENGLAND (3 seviye) ----------------
   { id: 'eng1', country: 'England', cc: 'gb-eng', tier: 1, name: 'Premier League',
     clubs: 'Arsenal|Aston Villa|Bournemouth|Brentford|Brighton & Hove Albion|Chelsea|Coventry City|Crystal Palace|Everton|Fulham|Hull City|Ipswich Town|Leeds United|Liverpool|Manchester City|Manchester United|Newcastle United|Nottingham Forest|Sunderland|Tottenham Hotspur' },
@@ -131,3 +131,6 @@ export const LEAGUES = [
   { id: 'bul1', country: 'Bulgaria', cc: 'bg', tier: 1, name: 'First League',
     clubs: 'Arda Kardzhali|Botev Plovdiv|Botev Vratsa|Cherno More|CSKA 1948|CSKA Sofia|Dunav Ruse|Levski Sofia|Lokomotiv Plovdiv|Lokomotiv Sofia|Ludogorets|Septemvri Sofia|Slavia Sofia|Spartak Varna' },
 ];
+
+// Ülkeler alfabetik, her ülkenin içinde 1. seviye önce.
+export const LEAGUES = ALL_LEAGUES.sort((a, b) => a.country.localeCompare(b.country, 'en') || a.tier - b.tier);
