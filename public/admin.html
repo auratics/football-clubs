@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Admin — Most Hated Club</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    textarea { width: 100%; min-height: 260px; background: #0f1115; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 14px/1.5 ui-monospace, monospace; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .ok { color: var(--green); }
+    .reminder { background: rgba(255,59,59,.12); border: 1px solid var(--red); }
+  </style>
+</head>
+<body>
+  <header class="top"><a href="/" class="logo">😤 Most Hated <span>Club</span> — Admin</a></header>
+  <main>
+    <section id="reminder" class="card reminder" hidden>
+      <h2>⚠️ It's August — time to update the clubs</h2>
+      <p>Promoted and relegated clubs need to move. Pick each league below, fix its list, and press Save. When you're done with all leagues, press the button.</p>
+      <button id="doneBtn" class="btn">I'm done for this season</button>
+    </section>
+
+    <section class="card">
+      <h2>Club lists</h2>
+      <p class="meta" id="info"></p>
+      <label>League
+        <select id="league"></select>
+      </label>
+      <p class="meta" style="margin-top:12px">One club per line. Moving a club between leagues: add it to the new league's list (same country). Removed clubs are hidden but their old votes stay in the archive. Do not rename a club unless you mean it, because a renamed club starts a new record.</p>
+      <textarea id="clubs" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button id="saveBtn" class="btn">Save this league</button>
+        <span id="status"></span>
+      </div>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data;
+    async function load(keep) {
+      data = await (await fetch('/api/admin/data')).json();
+      $('reminder').hidden = !data.reminder;
+      $('info').textContent = `${data.leagues.length} leagues · ${data.leagues.reduce((n, l) => n + l.clubs.length, 0)} active clubs · ${data.totalVotes.toLocaleString('en-US')} votes in total` +
+        (data.seasonUpdated ? ` · season marked updated on ${data.seasonUpdated.slice(0, 10)}` : '');
+      $('league').innerHTML = data.leagues.map((l) => `<option value="${l.id}">${l.country} — ${l.name} (${l.clubs.length})</option>`).join('');
+      if (keep) $('league').value = keep;
+      show();
+    }
+    function show() {
+      const l = data.leagues.find((x) => x.id === $('league').value);
+      $('clubs').value = l.clubs.join('\n');
+      $('status').textContent = '';
+    }
+    $('league').onchange = show;
+    $('saveBtn').onclick = async () => {
+      const league = $('league').value;
+      const clubs = $('clubs').value.split('\n').map((s) => s.trim()).filter(Boolean);
+      const r = await fetch('/api/admin/league', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ league, clubs }) });
+      if (!r.ok) { $('status').textContent = 'Error while saving'; return; }
+      await load(league);
+      $('status').innerHTML = '<span class="ok">Saved ✓</span>';
+    };
+    $('doneBtn').onclick = async () => {
+      await fetch('/api/admin/season-done', { method: 'POST' });
+      load($('league').value);
+    };
+    load();
+  </script>
+</body>
+</html>

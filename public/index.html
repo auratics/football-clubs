@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Most Hated Club — Which football club irritates you the most this month?</title>
+  <meta name="description" content="Vote for the football club that irritates you the most. Monthly and all-time rankings of the most hated clubs in the world, by country and by league.">
+  <meta property="og:title" content="Most Hated Club">
+  <meta property="og:description" content="Which football club irritates you the most this month? Vote and see the rankings.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <!--
+    GOOGLE ADSENSE: Onay aldıktan sonra AdSense'in verdiği <script> satırını buraya yapıştırın.
+    Ör: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script>
+  -->
+</head>
+<body>
+  <header class="top">
+    <a href="./" class="logo">😤 Most Hated <span>Club</span></a>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search any club…" autocomplete="off" aria-label="Search clubs">
+      <div id="searchResults" class="search-results" hidden></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Which football club <em>irritates</em> you the most this month?</h1>
+      <p class="sub">One vote per league, every week. The monthly ranking resets on the 1st. <span id="monthLabel"></span></p>
+    </section>
+
+    <!-- REKLAM ALANI 1 -->
+    <div class="ad" data-slot="top">Advertisement</div>
+
+    <section class="card vote" id="vote">
+      <h2>Cast your vote</h2>
+      <div class="pickers">
+        <label>Country
+          <select id="country"></select>
+        </label>
+        <label>League
+          <select id="league"></select>
+        </label>
+      </div>
+      <div id="voteNotice" class="notice" hidden></div>
+      <div id="clubGrid" class="club-grid"></div>
+      <button id="voteBtn" class="btn big" disabled>Pick a club</button>
+      <p id="voteError" class="error" hidden></p>
+    </section>
+
+    <section class="two-col">
+      <div class="card">
+        <h2>🔥 This month's most hated</h2>
+        <ol id="topMonth" class="rank-list"></ol>
+        <button class="link" data-goto="month">See full ranking →</button>
+      </div>
+      <div class="card">
+        <h2>🏆 All-time most hated</h2>
+        <ol id="topAll" class="rank-list"></ol>
+        <button class="link" data-goto="all">See full ranking →</button>
+      </div>
+    </section>
+
+    <!-- REKLAM ALANI 2 -->
+    <div class="ad" data-slot="middle">Advertisement</div>
+
+    <section class="card" id="movers">
+      <h2>📈 On the move</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-mv="risers">Rising vs last month</button>
+        <button class="tab" data-mv="fallers">Falling</button>
+        <button class="tab" data-mv="trending">Hot this week</button>
+      </div>
+      <ol id="moversList" class="rank-list"></ol>
+    </section>
+
+    <section class="card" id="explore">
+      <h2>📊 Explore the rankings</h2>
+      <div class="pickers">
+        <label>Period
+          <select id="period"></select>
+        </label>
+        <label>Ranking
+          <select id="scope"></select>
+        </label>
+      </div>
+      <p id="exploreMeta" class="meta"></p>
+      <ol id="exploreList" class="rank-list full"></ol>
+      <button id="moreBtn" class="btn ghost" hidden>Show more</button>
+    </section>
+
+    <!-- REKLAM ALANI 3 -->
+    <div class="ad" data-slot="bottom">Advertisement</div>
+  </main>
+
+  <footer>
+    <p>Just for fun. Rankings are based on anonymous visitor votes, not facts.</p>
+    <p><a href="privacy.html">Privacy &amp; cookies</a></p>
+  </footer>
+
+  <!-- Kulüp penceresi -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <button class="close" id="modalClose" aria-label="Close">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
