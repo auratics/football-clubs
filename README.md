@@ -16,7 +16,7 @@ Tarayıcıda http://localhost:3000 adresini aç. **Node.js 22.13 veya üstü** g
 | Dosya | Ne işe yarar |
 |---|---|
 | `server.js` | Sunucu kodunun tamamı (oylama, sıralamalar, yönetici paneli, ağustos hatırlatması) |
-| `data/leagues.js` | **İlk** açılışta yüklenen ligler ve kulüpler (55 lig, 973 kulüp) |
+| `data/leagues.js` | **İlk** açılışta yüklenen ligler ve kulüpler (55 lig) |
 | `data/votes.db` | Veritabanı. Kendiliğinden oluşur. **Bu dosyayı düzenli yedekle.** |
 | `public/` | Sitenin kendisi (ana sayfa, yönetici, gizlilik sayfaları) |
 
@@ -52,7 +52,7 @@ Tarayıcıda http://localhost:3000 adresini aç. **Node.js 22.13 veya üstü** g
    - Listeden çıkarılan kulüpler silinmez. Yalnızca gizlenir; eski oyları arşivde kalır.
 4. İşin bitince "I'm done for this season" butonuna bas, uyarı kaybolur.
 
-> ⚠️ **Yayına almadan önce kulüp listelerini kontrol et.** Listeleri hafızamdan, 2025/26 sezonuna göre yazdım. Bazı ligler büyük ihtimalle güncel değil; özellikle takvim yılına göre oynanan ligler (Brezilya, Arjantin, Norveç, İsveç, Japonya, Kore, ABD vb.) ve küçük ligler. Hepsini `/admin` panelinden düzeltebilirsin.
+> Kulüp listeleri Kasım 2026'da Wikipedia sezon sayfalarından alındı (2026/27 ya da takvim yılına göre 2026 sezonu). Hata görürsen `/admin` panelinden düzeltebilirsin.
 
 ## Yayına alma (önerilen: Railway veya Render + Cloudflare)
 
