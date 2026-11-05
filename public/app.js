@@ -1,4 +1,4 @@
-// Most Hated Club — ön yüz (framework yok)
+// Most Irritated Club: ön yüz (framework yok)
 (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -127,14 +127,14 @@
     const l = S.leagueById[club.league] || { name: '', cc: 'un', country: '' };
     const canVote = club.active && !S.me.votes[club.league];
     const shareText = stats.month.rank
-      ? `${club.name} is the ${ordinal(stats.month.rank)} most hated football club in the world this month 😤 Do you agree?`
-      : `Do you hate ${club.name}? Vote now 😤`;
+      ? `${club.name} is the ${ordinal(stats.month.rank)} most irritating football club in the world this month 😤 Do you agree?`
+      : `Does ${club.name} irritate you too? Vote now 😤`;
     const shareUrl = `${location.origin}${location.pathname}?club=${club.id}`;
     $('modalBody').innerHTML = `
       ${justVoted ? '<span class="kick">Your vote is in</span>' : ''}
       <div class="club-head">${flag(l.cc)}<h3>${esc(club.name)}</h3></div>
       <p class="club-league">${esc(l.name)} · ${esc(l.country)}</p>
-      ${justVoted && stats.month.rank ? `<div class="big-rank">${ordinal(stats.month.rank)}</div><p class="big-line">${esc(club.name)} is now the ${ordinal(stats.month.rank)} most hated club in the world this month.</p>` : ''}
+      ${justVoted && stats.month.rank ? `<div class="big-rank">${ordinal(stats.month.rank)}</div><p class="big-line">${esc(club.name)} is now the ${ordinal(stats.month.rank)} most irritating club in the world this month.</p>` : ''}
       <div class="stats">
         ${statBox(stats.month, 'World, ' + monthName(data.month).split(' ')[0])}
         ${statBox(stats.all, 'World, all-time')}
@@ -155,7 +155,7 @@
     const mv = body.querySelector('.modal-vote');
     if (mv) mv.onclick = () => vote(club.id);
     body.querySelector('.copy').onclick = async (e) => {
-      if (navigator.share) { try { await navigator.share({ title: 'Most Hated Club', text: shareText, url: shareUrl }); return; } catch { /* iptal */ } }
+      if (navigator.share) { try { await navigator.share({ title: 'Most Irritated Club', text: shareText, url: shareUrl }); return; } catch { /* iptal */ } }
       try { await navigator.clipboard.writeText(shareText + ' ' + shareUrl); e.target.textContent = 'Copied!'; } catch { prompt('Copy this link:', shareUrl); }
     };
     const sr = body.querySelector('.see-results');
@@ -220,13 +220,13 @@
     if (!first) {
       name.className = '';
       name.textContent = 'Nobody yet';
-      $('leadDeck').textContent = 'The table is empty. Which football club irritates you the most this month? Be the first to say it.';
+      $('leadDeck').textContent = 'The table is empty. Be the first to vote this month.';
       return;
     }
     name.className = first.name.length > 16 ? 'long' : '';
     name.innerHTML = `<button>${esc(first.name)}</button>`;
     name.firstChild.onclick = () => openClub(first.id);
-    $('leadDeck').textContent = `${fmt(first.votes)} vote${first.votes === 1 ? '' : 's'} and counting. Which football club irritates you the most this month?`;
+    $('leadDeck').textContent = `${fmt(first.votes)} vote${first.votes === 1 ? '' : 's'} and counting this month.`;
   }
 
   // ---------- Yükselenler / düşenler ----------

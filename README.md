@@ -1,4 +1,4 @@
-# Most Hated Club
+# Most Irritated Club
 
 "Bu ay seni en çok hangi futbol kulübü sinir ediyor?" – reklam bannerlarından gelir elde etmek için basit bir oylama sitesi.
 

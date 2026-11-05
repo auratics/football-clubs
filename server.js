@@ -1,4 +1,4 @@
-// Most Hated Club — tek dosyalık sunucu. Harici paket yok (Node 22.13+ gerekir).
+// Most Irritated Club: tek dosyalık sunucu. Harici paket yok (Node 22.13+ gerekir).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
