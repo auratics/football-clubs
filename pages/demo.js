@@ -14,6 +14,7 @@
     for (const name of l.clubs.split('|')) clubs.push({ id: clubs.length + 1, name, league: l.id, active: 1 });
   }
   const clubById = new Map(clubs.map((c) => [c.id, c]));
+  const leagueCc = Object.fromEntries(window.DEMO_LEAGUES.map((l) => [l.id, l.cc]));
 
   const monthKey = (d = new Date()) => d.toISOString().slice(0, 7);
   const monthsBack = (n) => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - n); return monthKey(d); };
@@ -46,6 +47,7 @@
       if (period !== 'all' && !(period.length === 4 ? v.month.startsWith(period + '-') : v.month === period)) continue;
       if (scope.startsWith('cc:') && v.country !== scope.slice(3)) continue;
       if (scope.startsWith('league:') && v.league !== scope.slice(7)) continue;
+      if (scope.startsWith('country:') && leagueCc[v.league] !== scope.slice(8)) continue;
       counts.set(v.club, (counts.get(v.club) || 0) + v.n);
     }
     const rows = [...counts].map(([id, votes]) => { const c = clubById.get(id); return { id, name: c.name, league: c.league, votes }; })

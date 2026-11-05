@@ -33,6 +33,7 @@
     setupPickers();
     setupPeriods(periods);
     setupScopes();
+    setupTableFilter();
     refreshHome();
 
     const q = new URLSearchParams(location.search);
@@ -197,17 +198,51 @@
   }
 
   async function refreshHome() {
-    const [m, a, mv] = await Promise.all([
-      api(`/api/rankings?period=${S.month}&limit=10`),
-      api('/api/rankings?period=all&limit=10'),
+    const [lead, mv] = await Promise.all([
+      api(`/api/rankings?period=${S.month}&limit=1`),
       api('/api/movers'),
+      loadTables(),
     ]);
-    renderList($('topMonth'), m.rows);
-    renderList($('topAll'), a.rows);
-    renderLead(m.rows[0]);
+    renderLead(lead.rows[0]);
     S.movers = mv;
     renderMovers();
     loadExplore(true);
+  }
+
+  // Ana sayfa tabloları: ülke ve lig filtresi
+  function setupTableFilter() {
+    const seen = new Set();
+    const countries = S.leagues.filter((l) => !seen.has(l.cc) && seen.add(l.cc));
+    $('tableCountry').innerHTML = '<option value="">All countries</option>' +
+      countries.map((l) => `<option value="${esc(l.cc)}">${esc(l.country)}</option>`).join('');
+    $('tableCountry').onchange = () => { fillTableLeagues(); loadTables(); };
+    $('tableLeague').onchange = loadTables;
+    fillTableLeagues();
+  }
+  function fillTableLeagues() {
+    const cc = $('tableCountry').value;
+    $('tableLeague').innerHTML = '<option value="">All leagues</option>' + S.leagues.filter((l) => l.cc === cc)
+      .map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+    $('tableLeague').disabled = !cc;
+  }
+  function tableScope() {
+    const cc = $('tableCountry').value, league = $('tableLeague').value;
+    if (league) return 'league:' + league;
+    if (!cc) return 'world';
+    const leagues = S.leagues.filter((l) => l.cc === cc);
+    return leagues.length === 1 ? 'league:' + leagues[0].id : 'country:' + cc;
+  }
+  let tablesRun = 0;
+  async function loadTables() {
+    const run = ++tablesRun, scope = encodeURIComponent(tableScope());
+    const [m, a] = await Promise.all([
+      api(`/api/rankings?period=${S.month}&scope=${scope}&limit=10`),
+      api(`/api/rankings?period=all&scope=${scope}&limit=10`),
+    ]);
+    if (run !== tablesRun) return; // daha yeni bir filtre seçildi
+    const none = scope === 'world' ? undefined : 'No votes here yet.';
+    renderList($('topMonth'), m.rows, {}, none);
+    renderList($('topAll'), a.rows, {}, none);
   }
 
   // Ayın 1. sırası manşet olur
@@ -257,13 +292,11 @@
   function setupScopes() {
     const opts = ['<option value="world">Worldwide</option>'];
     if (S.me.country !== 'ZZ') opts.push(`<option value="cc:${S.me.country}">Votes from ${esc(regionName(S.me.country))}</option>`);
-    let cur = null, group = [];
-    const flush = () => { if (cur) opts.push(`<optgroup label="${esc(cur)}">${group.join('')}</optgroup>`); group = []; };
-    for (const l of S.leagues) {
-      if (l.country !== cur) { flush(); cur = l.country; }
-      group.push(`<option value="league:${l.id}">${esc(l.country)} — ${esc(l.name)}</option>`);
+    for (const cc of new Set(S.leagues.map((l) => l.cc))) {
+      const leagues = S.leagues.filter((l) => l.cc === cc), name = esc(leagues[0].country);
+      const all = leagues.length > 1 ? `<option value="country:${esc(cc)}">${name}: all leagues</option>` : '';
+      opts.push(`<optgroup label="${name}">${all}${leagues.map((l) => `<option value="league:${l.id}">${name}: ${esc(l.name)}</option>`).join('')}</optgroup>`);
     }
-    flush();
     $('scope').innerHTML = opts.join('');
     $('scope').onchange = () => loadExplore(true);
     $('moreBtn').onclick = () => { exploreLimit += 50; loadExplore(false); };
@@ -284,7 +317,7 @@
     loadExplore(true).then(() => $('explore').scrollIntoView({ behavior: 'smooth' }));
   }
   document.querySelectorAll('[data-goto]').forEach((b) => (b.onclick = () =>
-    gotoExplore(b.dataset.goto === 'all' ? 'all' : S.month, 'world')));
+    gotoExplore(b.dataset.goto === 'all' ? 'all' : S.month, tableScope())));
 
   init().catch((e) => { console.error(e); $('voteError').textContent = 'Could not load. Please refresh the page.'; $('voteError').hidden = false; });
 })();

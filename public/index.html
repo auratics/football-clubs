@@ -57,17 +57,29 @@
           <p id="voteError" class="error" hidden></p>
         </section>
 
-        <section>
-          <h2 class="section-h">This month's table</h2>
-          <ol id="topMonth" class="rank-list home"></ol>
-          <button class="link" data-goto="month">Full table</button>
-        </section>
+        <div class="tables">
+          <div class="table-filter">
+            <label>Country
+              <select id="tableCountry"></select>
+            </label>
+            <label>League
+              <select id="tableLeague"></select>
+            </label>
+          </div>
+          <div class="tables-grid">
+            <section>
+              <h2 class="section-h">This month's table</h2>
+              <ol id="topMonth" class="rank-list home"></ol>
+              <button class="link" data-goto="month">Full table</button>
+            </section>
 
-        <section>
-          <h2 class="section-h">All-time table</h2>
-          <ol id="topAll" class="rank-list home"></ol>
-          <button class="link" data-goto="all">Full table</button>
-        </section>
+            <section>
+              <h2 class="section-h">All-time table</h2>
+              <ol id="topAll" class="rank-list home"></ol>
+              <button class="link" data-goto="all">Full table</button>
+            </section>
+          </div>
+        </div>
       </div>
 
       <!-- REKLAM ALANI 1 -->

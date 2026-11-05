@@ -142,7 +142,8 @@ function clubsPayload() {
 }
 
 // ---------- Sıralamalar ----------
-// period: 'all' | 'YYYY' | 'YYYY-MM'   scope: 'world' | 'cc:XX' | 'league:ID'
+// period: 'all' | 'YYYY' | 'YYYY-MM'
+// scope: 'world' | 'cc:XX' (oy verenin ülkesi) | 'country:gb-eng' (kulübün ülkesi) | 'league:ID'
 let rankCache = new Map();
 function ranking(period, scope) {
   const key = period + '|' + scope;
@@ -154,6 +155,7 @@ function ranking(period, scope) {
   else return null;
   if (scope === 'world') { /* hepsi */ }
   else if (/^cc:[A-Z]{2}$/.test(scope)) { where.push('v.country = ?'); params.push(scope.slice(3)); }
+  else if (/^country:[a-z]{2}(-[a-z]{3})?$/.test(scope)) { where.push('c.cc = ?'); params.push(scope.slice(8)); }
   else if (/^league:[a-z0-9]+$/.test(scope)) { where.push('v.league_id = ?'); params.push(scope.slice(7)); }
   else return null;
 
