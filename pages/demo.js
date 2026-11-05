@@ -135,6 +135,6 @@
   // Keep it obvious that the rankings are not real results.
   const banner = document.createElement('div');
   banner.textContent = 'Demo preview: all numbers are made-up samples. Your votes stay in this browser only.';
-  banner.style.cssText = 'background:#3b3212;color:#ffd978;text-align:center;font-size:13px;font-weight:600;padding:7px 12px';
+  banner.style.cssText = 'background:#ffd54a;color:#111;text-align:center;font-size:13px;font-weight:600;padding:7px 12px';
   document.body.prepend(banner);
 })();
