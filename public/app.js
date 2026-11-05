@@ -50,6 +50,7 @@
     if (mine) $('country').value = mine.cc;
     $('country').onchange = fillLeagues;
     $('league').onchange = fillClubs;
+    $('club').onchange = () => { S.selected = Number($('club').value) || null; updateVoteBtn(); };
     $('voteBtn').onclick = () => S.selected && vote(S.selected);
     fillLeagues();
   }
@@ -64,15 +65,10 @@
     const voted = S.me.votes[lid];
     S.selected = null;
     $('voteError').hidden = true;
-    const clubs = S.clubs.filter((c) => c.league === lid);
-    $('clubGrid').innerHTML = clubs.map((c) =>
-      `<button class="club-btn" data-id="${c.id}" ${voted ? 'disabled' : ''}>${flag(S.leagueById[lid].cc)}<span>${esc(c.name)}</span></button>`).join('');
-    $('clubGrid').querySelectorAll('.club-btn').forEach((b) => (b.onclick = () => {
-      $('clubGrid').querySelectorAll('.selected').forEach((x) => x.classList.remove('selected'));
-      b.classList.add('selected');
-      S.selected = Number(b.dataset.id);
-      updateVoteBtn();
-    }));
+    $('clubFlag').innerHTML = flag(S.leagueById[lid].cc);
+    $('club').innerHTML = '<option value="">Choose a club…</option>' + S.clubs.filter((c) => c.league === lid)
+      .map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    $('club').disabled = Boolean(voted);
     if (voted) {
       const c = S.clubById[voted.club];
       $('voteNotice').innerHTML = `You already voted for <b>${esc(c ? c.name : 'a club')}</b> in this league. Your next vote here opens <b>${dateStr(voted.next)}</b>. You can still vote in other leagues!`;
@@ -290,5 +286,5 @@
   document.querySelectorAll('[data-goto]').forEach((b) => (b.onclick = () =>
     gotoExplore(b.dataset.goto === 'all' ? 'all' : S.month, 'world')));
 
-  init().catch((e) => { console.error(e); $('clubGrid').innerHTML = '<p class="error">Could not load. Please refresh the page.</p>'; });
+  init().catch((e) => { console.error(e); $('voteError').textContent = 'Could not load. Please refresh the page.'; $('voteError').hidden = false; });
 })();
