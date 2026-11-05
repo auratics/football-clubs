@@ -5,25 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Admin — Most Hated Club</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
   <style>
-    textarea { width: 100%; min-height: 260px; background: #0f1115; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 14px/1.5 ui-monospace, monospace; }
+    textarea { width: 100%; min-height: 320px; background: var(--paper-light); color: var(--ink); border: 1px solid var(--ink); padding: 10px; font: 14px/1.5 ui-monospace, monospace; }
+    .row .btn { width: auto; }
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .ok { color: var(--green); }
-    .reminder { background: rgba(255,59,59,.12); border: 1px solid var(--red); }
+    .reminder { margin-top: 18px; padding: 14px; background: var(--red-tint); border: 2px solid var(--red); }
+    .reminder .btn { width: auto; margin-top: 8px; }
   </style>
 </head>
 <body>
-  <header class="top"><a href="/" class="logo">😤 Most Hated <span>Club</span> — Admin</a></header>
+  <div class="page">
+  <header><a href="./" class="logo small">Most Hated Club</a><div class="rule"></div></header>
   <main>
     <section id="reminder" class="card reminder" hidden>
-      <h2>⚠️ It's August — time to update the clubs</h2>
+      <h2>It's August: time to update the clubs</h2>
       <p>Promoted and relegated clubs need to move. Pick each league below, fix its list, and press Save. When you're done with all leagues, press the button.</p>
       <button id="doneBtn" class="btn">I'm done for this season</button>
     </section>
 
     <section class="card">
-      <h2>Club lists</h2>
+      <h2 class="section-h">Club lists</h2>
       <p class="meta" id="info"></p>
       <label>League
         <select id="league"></select>
@@ -36,6 +39,7 @@
       </div>
     </section>
   </main>
+  </div>
   <script>
     const $ = (id) => document.getElementById(id);
     let data;

@@ -28,7 +28,7 @@
     S.clubs.forEach((c) => (S.clubById[c.id] = c));
     S.me = me;
     S.month = me.month;
-    $('monthLabel').textContent = `Now voting: ${monthName(S.month)}.`;
+    $('edition').textContent = `${monthName(S.month)} edition`;
 
     setupPickers();
     setupPeriods(periods);
@@ -84,9 +84,9 @@
     const b = $('voteBtn');
     const lid = $('league').value;
     if (S.me.votes[lid]) { b.disabled = true; b.textContent = 'Already voted this week'; return; }
-    if (!S.selected) { b.disabled = true; b.textContent = 'Pick a club'; return; }
+    if (!S.selected) { b.disabled = true; b.textContent = 'Pick a club first'; return; }
     b.disabled = false;
-    b.textContent = `😤 I can't stand ${S.clubById[S.selected].name}`;
+    b.textContent = `I can't stand ${S.clubById[S.selected].name}`;
   }
 
   async function vote(clubId) {
@@ -131,16 +131,17 @@
       : `Do you hate ${club.name}? Vote now 😤`;
     const shareUrl = `${location.origin}${location.pathname}?club=${club.id}`;
     $('modalBody').innerHTML = `
-      ${justVoted ? `<div class="voted-banner">✅ Vote counted! Here's where ${esc(club.name)} stands.</div>` : ''}
+      ${justVoted ? '<span class="kick">Your vote is in</span>' : ''}
       <div class="club-head">${flag(l.cc)}<h3>${esc(club.name)}</h3></div>
       <p class="club-league">${esc(l.name)} · ${esc(l.country)}</p>
+      ${justVoted && stats.month.rank ? `<div class="big-rank">${ordinal(stats.month.rank)}</div><p class="big-line">${esc(club.name)} is now the ${ordinal(stats.month.rank)} most hated club in the world this month.</p>` : ''}
       <div class="stats">
         ${statBox(stats.month, 'World, ' + monthName(data.month).split(' ')[0])}
         ${statBox(stats.all, 'World, all-time')}
         ${statBox(stats.league, 'In ' + esc(l.name) + ', this month')}
         ${stats.country ? statBox(stats.country, 'Votes from ' + esc(regionName(stats.country.cc)) + ', this month') : ''}
       </div>
-      ${canVote ? `<button class="btn modal-vote">😤 I can't stand ${esc(club.name)}</button>` : ''}
+      ${canVote ? `<button class="btn modal-vote">I can't stand ${esc(club.name)}</button>` : ''}
       <p class="error" hidden></p>
       <p class="meta" style="margin-top:14px">Share it:</p>
       <div class="share">
@@ -149,7 +150,7 @@
         <a target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}">Facebook</a>
         <button class="copy">Copy link</button>
       </div>
-      ${justVoted ? '<button class="btn ghost see-results">See full results</button>' : ''}`;
+      ${justVoted ? '<button class="btn ghost see-results">See the full league table</button>' : ''}`;
     const body = $('modalBody');
     const mv = body.querySelector('.modal-vote');
     if (mv) mv.onclick = () => vote(club.id);
@@ -186,14 +187,12 @@
   document.addEventListener('click', (e) => { if (!e.target.closest('.search')) $('searchResults').hidden = true; });
 
   // ---------- Listeler ----------
-  function rowHtml(r, { right, highlight, max } = {}) {
+  function rowHtml(r, { right, highlight } = {}) {
     const l = S.leagueById[r.league] || { cc: 'un', name: '' };
-    const pct = max ? Math.max(2, Math.round((r.votes / max) * 100)) : 0;
     return `<li data-id="${r.id}" class="${highlight === r.id ? 'mine' : ''}">
       <span class="pos">${r.rank ?? ''}</span>
       <span class="name">${flag(l.cc)}<span>${esc(r.name)}</span><small>${esc(l.name)}</small></span>
       <span class="val">${r.right ?? right ?? fmt(r.votes)}</span>
-      ${max ? `<span class="bar" style="width:${pct}%"></span>` : ''}
     </li>`;
   }
   function renderList(el, rows, opts = {}, emptyText = 'No votes yet. Be the first!') {
@@ -207,11 +206,27 @@
       api('/api/rankings?period=all&limit=10'),
       api('/api/movers'),
     ]);
-    renderList($('topMonth'), m.rows, { max: m.rows[0]?.votes });
-    renderList($('topAll'), a.rows, { max: a.rows[0]?.votes });
+    renderList($('topMonth'), m.rows);
+    renderList($('topAll'), a.rows);
+    renderLead(m.rows[0]);
     S.movers = mv;
     renderMovers();
     loadExplore(true);
+  }
+
+  // Ayın 1. sırası manşet olur
+  function renderLead(first) {
+    const name = $('leadName');
+    if (!first) {
+      name.className = '';
+      name.textContent = 'Nobody yet';
+      $('leadDeck').textContent = 'The table is empty. Which football club irritates you the most this month? Be the first to say it.';
+      return;
+    }
+    name.className = first.name.length > 16 ? 'long' : '';
+    name.innerHTML = `<button>${esc(first.name)}</button>`;
+    name.firstChild.onclick = () => openClub(first.id);
+    $('leadDeck').textContent = `${fmt(first.votes)} vote${first.votes === 1 ? '' : 's'} and counting. Which football club irritates you the most this month?`;
   }
 
   // ---------- Yükselenler / düşenler ----------
@@ -244,8 +259,8 @@
     $('period').onchange = () => loadExplore(true);
   }
   function setupScopes() {
-    const opts = ['<option value="world">🌍 Worldwide</option>'];
-    if (S.me.country !== 'ZZ') opts.push(`<option value="cc:${S.me.country}">📍 Votes from ${esc(regionName(S.me.country))}</option>`);
+    const opts = ['<option value="world">Worldwide</option>'];
+    if (S.me.country !== 'ZZ') opts.push(`<option value="cc:${S.me.country}">Votes from ${esc(regionName(S.me.country))}</option>`);
     let cur = null, group = [];
     const flush = () => { if (cur) opts.push(`<optgroup label="${esc(cur)}">${group.join('')}</optgroup>`); group = []; };
     for (const l of S.leagues) {
@@ -263,7 +278,7 @@
     const r = await api(`/api/rankings?period=${encodeURIComponent(period)}&scope=${encodeURIComponent(scope)}&limit=${exploreLimit}`);
     const pLabel = period === 'all' ? 'all time' : /^\d{4}$/.test(period) ? `${period} total` : monthName(period);
     $('exploreMeta').textContent = `${fmt(r.total)} votes · ${fmt(r.count)} clubs · ${pLabel}`;
-    renderList($('exploreList'), r.rows, { max: r.rows[0]?.votes, highlight: highlightId });
+    renderList($('exploreList'), r.rows, { highlight: highlightId });
     $('moreBtn').hidden = r.rows.length >= r.count;
   }
   function gotoExplore(period, scope, hl) {
