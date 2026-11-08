@@ -76,7 +76,8 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; text-transform: upperca
 .coupon .tag { margin: 4px 0 12px; font-style: italic; }
 .pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 label { display: block; font: 13px var(--ui); color: var(--muted); }
-select { display: block; width: 100%; min-height: 44px; margin-top: 4px; padding: 8px; background: var(--paper-light); border: 1px solid var(--ink); border-radius: 0; font-family: var(--ui); font-size: 15px; color: var(--ink); }
+select { display: block; width: 100%; min-height: 44px; margin-top: 4px; padding: 8px 36px 8px 10px; background: var(--paper-light) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23141414' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; border: 1px solid var(--ink); border-radius: 0; font-family: var(--ui); font-size: 15px; color: var(--ink); -webkit-appearance: none; appearance: none; text-overflow: ellipsis; }
+select::-ms-expand { display: none; }
 .notice { border-left: 4px solid var(--red); padding: 8px 10px; margin-bottom: 12px; background: var(--paper); font-size: 15px; }
 select:disabled { opacity: .55; cursor: not-allowed; }
 .pickers .wide { grid-column: 1 / -1; }
