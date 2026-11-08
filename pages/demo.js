@@ -1,6 +1,7 @@
 // GitHub Pages demo: stands in for server.js inside the browser by answering /api/* calls.
 // Numbers are generated samples; a visitor's own votes stay in their localStorage.
 (() => {
+  window.DEMO_MODE = true;
   const WEEK = 7 * 24 * 3600 * 1000;
   const STORE = 'mhc-demo-votes';
   const COUNTRIES = ['TR', 'GB', 'US', 'ES', 'DE', 'IT', 'FR', 'BR', 'AR', 'NL'];

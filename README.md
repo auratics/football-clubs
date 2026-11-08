@@ -1,4 +1,4 @@
-# Most Irritated Club
+# Most Irritating Club
 
 "Bu ay seni en çok hangi futbol kulübü sinir ediyor?" – reklam bannerlarından gelir elde etmek için basit bir oylama sitesi.
 
@@ -38,7 +38,7 @@ Tarayıcıda http://localhost:3000 adresini aç. **Node.js 22.13 veya üstü** g
 - Tekrar tekrar oy vermeyi iki kontrol engeller:
   1. **Çerez**: Tarayıcıya rastgele bir kimlik verilir; aynı tarayıcı aynı ligde 7 gün içinde ikinci kez oy veremez.
   2. **IP sınırı**: Biri çerezlerini silse bile aynı bağlantıdan bir ligde haftada en fazla 3 oy verilebilir. Sınırın 1 olmamasının sebebi, birçok kişinin aynı IP'yi paylaşması (mobil şebekeler, okul ya da iş yeri Wi-Fi'ı). IP adresleri açık halde saklanmaz, yalnızca şifrelenmiş (hash) halde tutulur.
-- Aylık sıralama **her ayın 1'inde (UTC)** sıfırlanır. Eski aylar arşivde kalır ve "Explore the rankings" bölümünden görülebilir (geçmiş aylar, yıllık toplamlar, tüm zamanlar).
+- Aylık sıralama **her ayın 1'inde (UTC)** sıfırlanır. Eski aylar silinmez; ana tablodaki "Period" filtresinden görülebilir (geçmiş aylar, yıllık toplamlar, tüm zamanlar).
 - Ziyaretçinin ülkesi Cloudflare'in `CF-IPCountry` başlığından alınır. Cloudflare yoksa tarayıcının dil ayarından kaba bir tahmin yapılır (ör. `en-US` → ABD). **Ülke sıralamalarının doğru olması için siteyi Cloudflare arkasına koy.**
 
 ## Küme düşen/çıkan kulüpler (her ağustos)
@@ -71,7 +71,7 @@ Küçük bir VPS (ör. Hetzner, ayda ~4 €) da olur. Ayarlar aynı; `node serve
 1. AdSense seni onaylamadan önce alan adı olan, yayında bir site ister. Sitede gizlilik sayfası (`/privacy`) zaten var.
 2. Onaylandıktan sonra:
    - AdSense'in verdiği `<script>` satırını `public/index.html` dosyasında `<head>` içinde işaretli yere yapıştır.
-   - Üç `<div class="ad" ...>Advertisement</div>` kutusunu AdSense reklam birimleriyle değiştir.
+   - İki `<div class="ad" ...>Advertisement</div>` kutusunu AdSense reklam birimleriyle değiştir.
    - AdSense'in verdiği satırı `public/ads.txt` dosyasına ekle.
 3. Avrupa'daki (AB/İngiltere) ziyaretçiler için Google **çerez onay penceresi** şart koşuyor. **AdSense → Gizlilik ve mesajlaşma** bölümünden ücretsiz onay mesajını (CMP) aç; kodda değişiklik gerekmez.
 

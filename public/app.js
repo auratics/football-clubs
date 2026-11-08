@@ -1,4 +1,4 @@
-// Most Irritated Club: ön yüz (framework yok)
+// Most Irritating Club: ön yüz (framework yok)
 (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -32,11 +32,14 @@
 
     setupPickers();
     setupPeriods(periods);
-    setupScopes();
     setupTableFilter();
-    refreshHome();
 
+    // Paylaşılan tablo bağlantısı: ?period=2026-11&scope=league:tur1
     const q = new URLSearchParams(location.search);
+    const sharedTable = q.has('period') || q.has('scope');
+    if (sharedTable) pickTable(q.get('period'), q.get('scope'));
+    await refreshHome();
+    if (sharedTable) $('tables').scrollIntoView();
     if (q.get('club')) openClub(Number(q.get('club')));
   }
 
@@ -83,7 +86,7 @@
     if (S.me.votes[lid]) { b.disabled = true; b.textContent = 'Already voted this week'; return; }
     if (!S.selected) { b.disabled = true; b.textContent = 'Pick a club first'; return; }
     b.disabled = false;
-    b.textContent = `I can't stand ${S.clubById[S.selected].name}`;
+    b.textContent = `${S.clubById[S.selected].name} irritates me`;
   }
 
   async function vote(clubId) {
@@ -138,7 +141,7 @@
         ${statBox(stats.league, 'In ' + esc(l.name) + ', this month')}
         ${stats.country ? statBox(stats.country, 'Votes from ' + esc(regionName(stats.country.cc)) + ', this month') : ''}
       </div>
-      ${canVote ? `<button class="btn modal-vote">I can't stand ${esc(club.name)}</button>` : ''}
+      ${canVote ? `<button class="btn modal-vote">${esc(club.name)} irritates me</button>` : ''}
       <p class="error" hidden></p>
       <p class="meta" style="margin-top:14px">Share it:</p>
       <div class="share">
@@ -152,11 +155,11 @@
     const mv = body.querySelector('.modal-vote');
     if (mv) mv.onclick = () => vote(club.id);
     body.querySelector('.copy').onclick = async (e) => {
-      if (navigator.share) { try { await navigator.share({ title: 'Most Irritated Club', text: shareText, url: shareUrl }); return; } catch { /* iptal */ } }
+      if (navigator.share) { try { await navigator.share({ title: 'Most Irritating Club', text: shareText, url: shareUrl }); return; } catch { /* iptal */ } }
       try { await navigator.clipboard.writeText(shareText + ' ' + shareUrl); e.target.textContent = 'Copied!'; } catch { prompt('Copy this link:', shareUrl); }
     };
     const sr = body.querySelector('.see-results');
-    if (sr) sr.onclick = () => { closeModal(); gotoExplore(S.month, 'league:' + club.league, club.id); };
+    if (sr) sr.onclick = () => { closeModal(); gotoTable(S.month, 'league:' + club.league, club.id); };
     $('modal').hidden = false;
     history.replaceState(null, '', '?club=' + club.id);
   }
@@ -201,48 +204,51 @@
     const [lead, mv] = await Promise.all([
       api(`/api/rankings?period=${S.month}&limit=1`),
       api('/api/movers'),
-      loadTables(),
+      loadTables(true),
     ]);
     renderLead(lead.rows[0]);
     S.movers = mv;
     renderMovers();
-    loadExplore(true);
   }
 
-  // Ana sayfa tabloları: ülke ve lig filtresi
+  // Ana sayfa tablosu: dönem, ülke ve lig filtresi. Eski aylar da buradan seçilir.
   function setupTableFilter() {
     const seen = new Set();
     const countries = S.leagues.filter((l) => !seen.has(l.cc) && seen.add(l.cc));
-    $('tableCountry').innerHTML = '<option value="">All countries</option>' +
+    const mine = S.me.country !== 'ZZ' ? `<option value="cc:${esc(S.me.country)}">Votes from ${esc(regionName(S.me.country))}</option>` : '';
+    $('tableCountry').innerHTML = '<option value="">All countries</option>' + mine +
       countries.map((l) => `<option value="${esc(l.cc)}">${esc(l.country)}</option>`).join('');
-    $('tableCountry').onchange = () => { fillTableLeagues(); loadTables(); };
-    $('tableLeague').onchange = loadTables;
+    $('tableCountry').onchange = () => { fillTableLeagues(); loadTables(true); };
+    $('tableLeague').onchange = () => loadTables(true);
+    $('moreBtn').onclick = () => { tableLimit += 50; loadTables(false); };
+    $('tableShare').onclick = () => shareTable($('period').value, tableScope());
     fillTableLeagues();
   }
   function fillTableLeagues() {
     const cc = $('tableCountry').value;
     $('tableLeague').innerHTML = '<option value="">All leagues</option>' + S.leagues.filter((l) => l.cc === cc)
       .map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
-    $('tableLeague').disabled = !cc;
+    $('tableLeague').disabled = !cc || cc.startsWith('cc:');
   }
   function tableScope() {
     const cc = $('tableCountry').value, league = $('tableLeague').value;
     if (league) return 'league:' + league;
     if (!cc) return 'world';
+    if (cc.startsWith('cc:')) return cc;
     const leagues = S.leagues.filter((l) => l.cc === cc);
     return leagues.length === 1 ? 'league:' + leagues[0].id : 'country:' + cc;
   }
-  let tablesRun = 0;
-  async function loadTables() {
-    const run = ++tablesRun, scope = encodeURIComponent(tableScope());
-    const [m, a] = await Promise.all([
-      api(`/api/rankings?period=${S.month}&scope=${scope}&limit=10`),
-      api(`/api/rankings?period=all&scope=${scope}&limit=10`),
-    ]);
+  let tablesRun = 0, tableLimit = 10, highlightId = null;
+  async function loadTables(reset) {
+    if (reset) tableLimit = 10;
+    const run = ++tablesRun, period = $('period').value, scope = tableScope();
+    const r = await api(`/api/rankings?period=${encodeURIComponent(period)}&scope=${encodeURIComponent(scope)}&limit=${tableLimit}`);
     if (run !== tablesRun) return; // daha yeni bir filtre seçildi
-    const none = scope === 'world' ? undefined : 'No votes here yet.';
-    renderList($('topMonth'), m.rows, {}, none);
-    renderList($('topAll'), a.rows, {}, none);
+    $('tableTitle').textContent = period === S.month ? "This month's table" : period === 'all' ? 'All-time table' : `${periodLabel(period)} table`;
+    $('tableMeta').textContent = `${scopeLabel(scope)} · ${fmt(r.total)} vote${r.total === 1 ? '' : 's'} · ${fmt(r.count)} club${r.count === 1 ? '' : 's'}`;
+    renderList($('tableList'), r.rows, { highlight: highlightId }, scope === 'world' && period === S.month ? undefined : 'No votes here yet.');
+    $('moreBtn').hidden = r.rows.length >= r.count;
+    $('tableShare').hidden = !r.rows.length;
   }
 
   // Ayın 1. sırası manşet olur
@@ -278,46 +284,135 @@
       right: `${fmt(r.votes)}<small>this week</small>` })), {}, 'No votes in the last 7 days.');
   }
 
-  // ---------- Keşfet (arşiv) ----------
-  let exploreLimit = 50, highlightId = null;
+  // ---------- Dönemler ----------
   function setupPeriods(p) {
-    const opts = [`<option value="${p.current}">This month (${monthName(p.current)})</option>`,
+    const opts = [`<option value="${p.current}">This month</option>`,
       `<option value="all">All time</option>`];
     const past = p.months.filter((m) => m !== p.current);
     if (past.length) opts.push(`<optgroup label="Past months">${past.map((m) => `<option value="${m}">${monthName(m)}</option>`).join('')}</optgroup>`);
     opts.push(`<optgroup label="Full year">${p.years.map((y) => `<option value="${y}">${y} total</option>`).join('')}</optgroup>`);
     $('period').innerHTML = opts.join('');
-    $('period').onchange = () => loadExplore(true);
+    $('period').onchange = () => loadTables(true);
   }
-  function setupScopes() {
-    const opts = ['<option value="world">Worldwide</option>'];
-    if (S.me.country !== 'ZZ') opts.push(`<option value="cc:${S.me.country}">Votes from ${esc(regionName(S.me.country))}</option>`);
-    for (const cc of new Set(S.leagues.map((l) => l.cc))) {
-      const leagues = S.leagues.filter((l) => l.cc === cc), name = esc(leagues[0].country);
-      const all = leagues.length > 1 ? `<option value="country:${esc(cc)}">${name}: all leagues</option>` : '';
-      opts.push(`<optgroup label="${name}">${all}${leagues.map((l) => `<option value="league:${l.id}">${name}: ${esc(l.name)}</option>`).join('')}</optgroup>`);
-    }
-    $('scope').innerHTML = opts.join('');
-    $('scope').onchange = () => loadExplore(true);
-    $('moreBtn').onclick = () => { exploreLimit += 50; loadExplore(false); };
-  }
-  async function loadExplore(reset) {
-    if (reset) { exploreLimit = 50; }
-    const period = $('period').value, scope = $('scope').value;
-    const r = await api(`/api/rankings?period=${encodeURIComponent(period)}&scope=${encodeURIComponent(scope)}&limit=${exploreLimit}`);
-    const pLabel = period === 'all' ? 'all time' : /^\d{4}$/.test(period) ? `${period} total` : monthName(period);
-    $('exploreMeta').textContent = `${fmt(r.total)} votes · ${fmt(r.count)} clubs · ${pLabel}`;
-    renderList($('exploreList'), r.rows, { highlight: highlightId });
-    $('moreBtn').hidden = r.rows.length >= r.count;
-  }
-  function gotoExplore(period, scope, hl) {
+  // Paylaşılan bağlantıdaki ya da oy sonrası istenen tabloyu filtrelere yansıtır.
+  function pickTable(period, scope) {
     if ([...$('period').options].some((o) => o.value === period)) $('period').value = period;
-    if (scope && [...$('scope').options].some((o) => o.value === scope)) $('scope').value = scope;
-    highlightId = hl || null;
-    loadExplore(true).then(() => $('explore').scrollIntoView({ behavior: 'smooth' }));
+    scope = scope || 'world';
+    let cc = '', league = '';
+    if (scope.startsWith('league:') && S.leagueById[scope.slice(7)]) { league = scope.slice(7); cc = S.leagueById[league].cc; }
+    else if (scope.startsWith('country:') && S.leagues.some((l) => l.cc === scope.slice(8))) cc = scope.slice(8);
+    else if (/^cc:[A-Z]{2}$/.test(scope)) {
+      // "Votes from X" yalnızca ziyaretçinin kendi ülkesi için listelenir; başka ülkeden gelen paylaşım linki de açılabilsin.
+      if (![...$('tableCountry').options].some((o) => o.value === scope)) $('tableCountry').add(new Option(`Votes from ${regionName(scope.slice(3))}`, scope), 1);
+      cc = scope;
+    }
+    $('tableCountry').value = cc;
+    fillTableLeagues();
+    if (league && S.leagues.filter((l) => l.cc === cc).length > 1) $('tableLeague').value = league;
   }
-  document.querySelectorAll('[data-goto]').forEach((b) => (b.onclick = () =>
-    gotoExplore(b.dataset.goto === 'all' ? 'all' : S.month, tableScope())));
+  function gotoTable(period, scope, hl) {
+    pickTable(period, scope);
+    highlightId = hl || null;
+    loadTables(true).then(() => $('tables').scrollIntoView({ behavior: 'smooth' }));
+  }
+
+  // ---------- Tablo paylaşımı ----------
+  const periodLabel = (p) => (p === 'all' ? 'All time' : /^\d{4}$/.test(p) ? `${p} total` : monthName(p));
+  function scopeLabel(scope) {
+    if (scope.startsWith('league:')) { const l = S.leagueById[scope.slice(7)]; return l ? `${l.country}: ${l.name}` : 'League'; }
+    if (scope.startsWith('country:')) { const l = S.leagues.find((x) => x.cc === scope.slice(8)); return l ? l.country : 'Country'; }
+    if (scope.startsWith('cc:')) return `Votes from ${regionName(scope.slice(3))}`;
+    return 'Worldwide';
+  }
+  // Kart, sitenin renkleriyle ve sunucusuz çizilir. Bayrak yüklenemezse onsuz devam eder.
+  async function tableImage(place, period, rows) {
+    const W = 1080, ROW = 92, TOP = 330, H = TOP + rows.length * ROW + 120;
+    const chars = rows.map((r) => r.name).join('').toUpperCase() + place + period + 'MOST IRRITATING CLUBS';
+    await Promise.allSettled([document.fonts.load('60px Anton', chars), document.fonts.load('600 36px "Source Serif 4"', chars + 'votes')]);
+    const flags = await Promise.all(rows.map((r) => new Promise((done) => {
+      const l = S.leagueById[r.league], img = new Image();
+      if (!l) return done(null);
+      img.crossOrigin = 'anonymous';
+      img.onload = () => done(img);
+      img.onerror = () => done(null);
+      img.src = `https://flagcdn.com/w80/${l.cc}.png`;
+    })));
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    const INK = '#141414', RED = '#cf1018', LINE = '#b9b4a6';
+    const fit = (text, weight, size, font, max) => {
+      do { g.font = `${weight} ${size}px ${font}`; size -= 2; } while (g.measureText(text).width > max && size > 20);
+    };
+    g.fillStyle = '#f4f0e6'; g.fillRect(0, 0, W, H);
+    g.fillStyle = INK; g.fillRect(60, 60, W - 120, 8);
+    g.textBaseline = 'alphabetic';
+    fit('MOST IRRITATING CLUBS', 400, 112, 'Anton, Impact, sans-serif', W - 120);
+    g.fillText('MOST IRRITATING CLUBS', 60, 196);
+    fit(place, 600, 44, '"Source Serif 4", Georgia, serif', W - 120);
+    g.fillStyle = RED; g.fillText(place, 60, 256);
+    g.fillStyle = '#5f5b50'; g.font = '400 34px "Source Serif 4", Georgia, serif'; g.fillText(period, 60, 300);
+    rows.forEach((r, i) => {
+      const y = TOP + i * ROW, base = y + 62;
+      g.fillStyle = LINE; g.fillRect(60, y, W - 120, 2);
+      g.fillStyle = i === 0 ? RED : INK;
+      g.font = '400 44px Anton, Impact, sans-serif';
+      g.textAlign = 'left'; g.fillText(String(r.rank), 60, base);
+      if (flags[i]) { const f = flags[i], h = 34; g.drawImage(f, 140, y + 29, Math.min(h * f.width / f.height, 60), h); }
+      const votes = fmt(r.votes);
+      g.textAlign = 'right'; g.fillStyle = INK; g.font = '600 38px "Source Serif 4", Georgia, serif';
+      const vw = g.measureText(votes).width; g.fillText(votes, W - 60, base);
+      g.textAlign = 'left';
+      fit(r.name.toLocaleUpperCase('en'), 400, 46, 'Anton, Impact, sans-serif', W - 60 - vw - 30 - 215);
+      g.fillText(r.name.toLocaleUpperCase('en'), 215, base);
+    });
+    const end = TOP + rows.length * ROW;
+    g.fillStyle = INK; g.fillRect(60, end, W - 120, 8);
+    g.font = '400 30px "Source Serif 4", Georgia, serif';
+    g.fillText(window.DEMO_MODE ? 'Demo: made-up sample numbers' : 'Which club irritates you the most? Vote now.', 60, end + 58);
+    g.textAlign = 'right'; g.font = '600 30px "Source Serif 4", Georgia, serif';
+    g.fillText(location.hostname, W - 60, end + 58);
+    return new Promise((done) => cv.toBlob(done, 'image/png'));
+  }
+  async function shareTable(period, scope) {
+    const r = await api(`/api/rankings?period=${encodeURIComponent(period)}&scope=${encodeURIComponent(scope)}&limit=10`);
+    if (!r.rows.length) return;
+    const place = scopeLabel(scope), when = periodLabel(period);
+    const url = `${location.origin}${location.pathname}?period=${encodeURIComponent(period)}&scope=${encodeURIComponent(scope)}`;
+    const text = `Most irritating football clubs (${place}, ${when}):\n` +
+      r.rows.slice(0, 3).map((x) => `${x.rank}. ${x.name}`).join('\n') + '\nDo you agree?';
+    $('modalBody').innerHTML = `
+      <h3 class="share-title">Share this table</h3>
+      <p class="club-league">${esc(place)} · ${esc(when)}</p>
+      <img class="share-preview" alt="Image of this table">
+      <div class="share">
+        <a target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}">X</a>
+        <a target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}">WhatsApp</a>
+        <a target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}">Facebook</a>
+        <button class="copy">Copy link</button>
+      </div>
+      <button class="btn ghost share-image" disabled>Preparing image…</button>`;
+    $('modal').hidden = false;
+    const body = $('modalBody');
+    body.querySelector('.copy').onclick = async (e) => {
+      try { await navigator.clipboard.writeText(url); e.target.textContent = 'Copied!'; } catch { prompt('Copy this link:', url); }
+    };
+    const btn = body.querySelector('.share-image');
+    const blob = await tableImage(place, when, r.rows);
+    if (!blob) { btn.textContent = 'Image not available'; return; }
+    const name = `most-irritating-${norm(place).replace(/[^a-z0-9]+/g, '-')}-${period}.png`;
+    const file = new File([blob], name, { type: 'image/png' });
+    const href = URL.createObjectURL(blob);
+    body.querySelector('.share-preview').src = href;
+    const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+    btn.textContent = canShare ? 'Share image' : 'Save image';
+    btn.disabled = false;
+    btn.onclick = async () => {
+      if (canShare) { try { await navigator.share({ files: [file], text: `${text} ${url}` }); } catch { /* iptal */ } return; }
+      const a = document.createElement('a');
+      a.href = href; a.download = name; a.click();
+    };
+  }
 
   init().catch((e) => { console.error(e); $('voteError').textContent = 'Could not load. Please refresh the page.'; $('voteError').hidden = false; });
 })();

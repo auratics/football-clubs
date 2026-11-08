@@ -1,4 +1,4 @@
-/* Most Irritated Club: gazete arka sayfası tasarımı */
+/* Most Irritating Club: gazete arka sayfası tasarımı */
 @font-face { font-family: 'Anton'; font-weight: 400; font-display: swap;
   src: url(fonts/anton-400-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
@@ -66,7 +66,7 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; text-transform: upperca
 .front { display: grid; gap: 22px; padding-top: 18px; }
 .tables { min-width: 0; }
 .table-filter { display: grid; gap: 10px; margin-bottom: 18px; }
-.tables-grid { display: grid; gap: 22px; }
+#tableMeta { margin: 6px 0 0; }
 .section-h { font-size: 27px; border-bottom: 3px solid var(--ink); padding-bottom: 4px; margin-bottom: 2px; }
 
 /* Oy kuponu */
@@ -88,6 +88,7 @@ select:disabled { opacity: .55; cursor: not-allowed; }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); font-family: var(--ui); font-size: 15px; text-transform: none; letter-spacing: 0; margin-top: 12px; min-height: 46px; }
 .btn.ghost:hover { background: var(--paper); }
 .link { background: none; border: 0; color: var(--red-dark); padding: 10px 0 0; min-height: 44px; font-family: var(--ui); font-size: 15px; text-decoration: underline; }
+.table-actions { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0 14px; }
 .error { color: var(--red-dark); margin: 10px 0 0; font-size: 15px; }
 .meta { color: var(--muted); font: 14px var(--ui); margin: 0 0 8px; }
 
@@ -99,7 +100,6 @@ select:disabled { opacity: .55; cursor: not-allowed; }
 .rank-list li:first-child .pos { color: var(--red); }
 .rank-list .name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 7px; min-width: 0; font-weight: 600; }
 .rank-list .name small { color: var(--muted); font: 12.5px var(--ui); }
-.rank-list.home .name small { display: none; }
 .rank-list .val { text-align: right; font-variant-numeric: tabular-nums; }
 .rank-list .val small { display: block; color: var(--muted); font: 12.5px var(--ui); }
 .rank-list .empty { display: block; color: var(--muted); font-style: italic; cursor: default; padding: 12px 0; }
@@ -113,7 +113,6 @@ select:disabled { opacity: .55; cursor: not-allowed; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 6px; }
 .tab { min-height: 42px; padding: 7px 11px; background: transparent; border: 1px solid var(--ink); font-family: var(--ui); font-size: 14px; }
 .tab.active { background: var(--ink); color: #fff; }
-.explore-pickers { margin-top: 12px; }
 
 /* Reklam */
 .ad { display: flex; align-items: center; justify-content: center; min-height: 110px; margin-top: 26px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); color: var(--muted); font: 12px var(--ui); letter-spacing: .14em; text-transform: uppercase; }
@@ -135,6 +134,10 @@ select:disabled { opacity: .55; cursor: not-allowed; }
 .share { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .share a, .share button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 2px; background: var(--ink); color: #fff; border: 0; text-decoration: none; font: 13px var(--ui); text-align: center; }
 
+.share-title { font-size: 30px; line-height: 1.1; padding-right: 34px; margin-top: 4px; }
+.share-preview { display: block; width: 100%; max-width: 260px; margin: 12px auto; min-height: 120px; background: var(--paper); border: 1px solid var(--line); }
+.share-image { margin-top: 6px; }
+
 /* Alt bilgi ve metin sayfaları */
 footer { margin-top: 26px; padding: 14px 0 34px; border-top: 5px solid var(--ink); color: var(--muted); font-size: 14px; text-align: center; }
 footer p { margin: 4px 0; }
@@ -146,7 +149,7 @@ footer a { color: inherit; }
 @media (max-width: 520px) { .pickers { grid-template-columns: 1fr; } .share { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 720px) {
   .page { padding: 16px 24px 0; }
-  .tables-grid { grid-template-columns: 1fr 1fr; }
+  .table-filter { grid-template-columns: 1fr 1fr 1fr; }
 }
 @media (min-width: 1040px) {
   .front { grid-template-columns: 5fr 8fr; }
