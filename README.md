@@ -66,6 +66,10 @@ SQLite **kalıcı bir diske** ihtiyaç duyar, bu yüzden barındırma hizmetinde
 
 Küçük bir VPS (ör. Hetzner, ayda ~4 €) da olur. Ayarlar aynı; `node server.js`'i pm2 veya systemd ile çalıştır.
 
+## Link önizlemesi
+
+`public/og.png` bağlantı paylaşılınca çıkan görseldir. Kendi alan adına taşıyınca `public/index.html` içindeki `og:image` satırına tam adresi yaz (ör. `https://alanadin.com/og.png`); WhatsApp ve X görseli göreli adresle göstermez.
+
 ## Reklamlar (Google AdSense)
 
 1. AdSense seni onaylamadan önce alan adı olan, yayında bir site ister. Sitede gizlilik sayfası (`/privacy`) zaten var.

@@ -19,5 +19,7 @@ const tag = '<script src="app.js"></script>';
 if (!html.includes(tag)) throw new Error('app.js script tag not found in index.html');
 fs.writeFileSync(index, html
   .replace(tag, `<script src="demo-data.js"></script>\n  <script src="demo.js"></script>\n  ${tag}`)
-  .replace('<head>', '<head>\n  <meta name="robots" content="noindex">'));
+  .replace('<head>', '<head>\n  <meta name="robots" content="noindex">')
+  // Link önizlemeleri görseli yalnızca tam adresle alır.
+  .replace('content="og.png"', 'content="https://auratics.github.io/football-clubs/og.png"'));
 console.log('Demo built in dist/');
