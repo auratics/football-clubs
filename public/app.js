@@ -253,20 +253,25 @@
   function renderLeaders(L) {
     const year = S.month.slice(0, 4);
     const votes = (c) => `${fmt(c.votes)} vote${c.votes === 1 ? '' : 's'}`;
-    const card = (cls, kick, cur, deck, prevLabel, prev) => `
+    // Telefonda kısa etiket ve kısa satır, geniş ekranda uzunları görünür.
+    const card = (cls, kick, short, cur, more, prevLabel, prev) => `
       <article class="leader ${cls}${cur ? '' : ' empty'}">
-        <span class="kick">${kick}</span>
-        <h2 class="${cls === 'main' && cur && cur.name.length > 16 ? 'long' : ''}">${cur ? `<button data-id="${cur.id}">${esc(cur.name)}</button>` : 'Nobody yet'}</h2>
-        <p class="deck">${cur ? deck(cur) : 'No votes yet. Be the first!'}</p>
-        <p class="prev">${prevLabel}: ${prev ? `<button data-id="${prev.id}">${esc(prev.name)}</button> · ${votes(prev)}` : 'no votes'}</p>
+        <span class="kick"><span class="wide-only">${kick}</span><span class="narrow-only">${short}</span></span>
+        <h2 class="${cur && cur.name.length > 16 ? 'long' : ''}" style="--w:${cur ? Math.max(...cur.name.split(' ').map((w) => w.length)) : 10}">${cur ? `<button data-id="${cur.id}">${esc(cur.name)}</button>` : 'Nobody yet'}</h2>
+        <p class="deck">${cur ? `${votes(cur)}<span class="wide-only"> ${more}</span>` : 'No votes yet'}</p>
+        <p class="prev">${prevLabel}: ${prev ? `<button data-id="${prev.id}">${esc(prev.name)}</button><span class="wide-only"> · ${votes(prev)}</span>` : 'no votes'}</p>
       </article>`;
     $('leaders').innerHTML =
-      card('main', "This month's worst offender", L.thisMonth, (c) => `${votes(c)} and counting this month.`,
-        `Last month (${monthName(prevMonth(S.month)).split(' ')[0]})`, L.lastMonth) +
+      card('main', "This month's worst offender", 'This month', L.thisMonth, 'and counting this month.',
+        `Last month<span class="wide-only"> (${monthName(prevMonth(S.month)).split(' ')[0]})</span>`, L.lastMonth) +
       `<div class="side-leaders">` +
-      card('', `Worst of ${year}`, L.thisYear, (c) => `${votes(c)} this year.`, `Last year (${Number(year) - 1})`, L.lastYear) +
-      card('', 'Worst of all time', L.allTime, (c) => `${votes(c)} in total.`, 'Before this month', L.beforeMonth) +
-      `</div>`;
+      card('', `Worst of ${year}`, year, L.thisYear, 'this year.', `Last year<span class="wide-only"> (${Number(year) - 1})</span>`, L.lastYear) +
+      card('', 'Worst of all time', 'All time', L.allTime, 'in total.', 'Before this month', L.beforeMonth) +
+      `</div>
+      <div class="lead-actions">
+        <a class="btn" href="#vote">Vote now</a>
+        <a class="btn ghost" href="#tables">See the results</a>
+      </div>`;
     $('leaders').querySelectorAll('button[data-id]').forEach((b) => (b.onclick = () => openClub(Number(b.dataset.id))));
   }
   const prevMonth = (m) => { const d = new Date(m + '-15T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); };
