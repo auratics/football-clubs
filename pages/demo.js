@@ -45,7 +45,8 @@
   function ranking(period, scope) {
     const counts = new Map();
     for (const v of allVotes()) {
-      if (period !== 'all' && !(period.length === 4 ? v.month.startsWith(period + '-') : v.month === period)) continue;
+      if (period.startsWith('before:')) { if (v.month >= period.slice(7)) continue; }
+      else if (period !== 'all' && !(period.length === 4 ? v.month.startsWith(period + '-') : v.month === period)) continue;
       if (scope.startsWith('cc:') && v.country !== scope.slice(3)) continue;
       if (scope.startsWith('league:') && v.league !== scope.slice(7)) continue;
       if (scope.startsWith('country:') && leagueCc[v.league] !== scope.slice(8)) continue;
@@ -120,6 +121,12 @@
       return s ? [200, s] : [404, { error: 'Club not found' }];
     }
     if (p.endsWith('/api/movers')) return [200, movers()];
+    if (p.endsWith('/api/leaders')) {
+      const top = (period) => { const t = ranking(period, 'world').rows[0]; return t ? { id: t.id, name: t.name, league: t.league, votes: t.votes } : null; };
+      const y = CURRENT.slice(0, 4);
+      return [200, { month: CURRENT, thisMonth: top(CURRENT), lastMonth: top(monthsBack(1)), thisYear: top(y), lastYear: top(String(Number(y) - 1)),
+        allTime: top('all'), beforeMonth: top('before:' + CURRENT) }];
+    }
     if (p.endsWith('/api/periods')) {
       const months = [0, 1, 2, 3].map(monthsBack);
       return [200, { current: CURRENT, months, years: [...new Set(months.map((m) => m.slice(0, 4)))] }];

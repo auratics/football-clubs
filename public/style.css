@@ -54,13 +54,19 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; text-transform: upperca
 .search-results small { margin-left: auto; color: var(--muted); }
 
 /* Manşet */
-.lead { padding: 16px 0 18px; border-bottom: 1px solid var(--ink); }
+.lead { display: grid; gap: 16px; padding: 16px 0 18px; border-bottom: 1px solid var(--ink); }
 .kick { display: inline-block; background: var(--red); color: #fff; font: 700 12.5px/1 var(--ui); letter-spacing: .06em; text-transform: uppercase; padding: 5px 7px; }
-.lead h2 { font-size: clamp(44px, 12.5vw, 112px); line-height: 1.02; margin: 8px 0; min-height: 1em; overflow-wrap: anywhere; }
-.lead h2.long { font-size: clamp(34px, 8vw, 76px); }
-.lead h2 button { all: unset; cursor: pointer; }
-.lead h2 button:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
-.lead p { margin: 0; font-size: 19px; max-width: 50ch; }
+.leader h2 { font-size: clamp(30px, 8vw, 56px); line-height: 1.12; margin: 8px 0 6px; overflow-wrap: break-word; }
+.leader.main h2 { font-size: clamp(44px, 12.5vw, 104px); padding-bottom: .1em; }
+.leader.main h2.long { font-size: clamp(34px, 8vw, 72px); }
+.leader h2 button, .leader .prev button { all: unset; cursor: pointer; }
+.leader h2 button:focus-visible, .leader .prev button:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+.leader .deck { margin: 0; font-size: 17px; }
+.leader.main .deck { font-size: 19px; }
+.leader .prev { margin: 8px 0 0; padding-top: 6px; border-top: 1px solid var(--line); color: var(--muted); font: 13.5px/1.4 var(--ui); }
+.leader .prev button { color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); }
+.leader.empty h2 { color: var(--muted); }
+.side-leaders { display: grid; gap: 16px; }
 
 /* Ana ızgara */
 .front { display: grid; gap: 22px; padding-top: 18px; }
@@ -148,10 +154,17 @@ footer a { color: inherit; }
 .prose h3 { font-size: 22px; margin: 20px 0 4px; }
 
 @media (max-width: 520px) { .pickers { grid-template-columns: 1fr; } .share { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 560px) {
+  .side-leaders { grid-template-columns: 1fr 1fr; }
+  .side-leaders .leader + .leader { border-left: 1px solid var(--ink); padding-left: 16px; }
+}
 @media (min-width: 720px) {
   .page { padding: 16px 24px 0; }
   .table-filter { grid-template-columns: 1fr 1fr 1fr; }
 }
 @media (min-width: 1040px) {
   .front { grid-template-columns: 5fr 8fr; }
+  .lead { grid-template-columns: 6fr 7fr; gap: 22px; }
+  .side-leaders { border-left: 1px solid var(--ink); padding-left: 22px; }
+  .side-leaders .leader h2 { font-size: 44px; }
 }

@@ -152,6 +152,7 @@ function ranking(period, scope) {
   if (period === 'all') { /* hepsi */ }
   else if (/^\d{4}$/.test(period)) { where.push('v.month LIKE ?'); params.push(period + '-%'); }
   else if (/^\d{4}-\d{2}$/.test(period)) { where.push('v.month = ?'); params.push(period); }
+  else if (/^before:\d{4}-\d{2}$/.test(period)) { where.push('v.month < ?'); params.push(period.slice(7)); } // o aya kadarki tüm zamanlar
   else return null;
   if (scope === 'world') { /* hepsi */ }
   else if (/^cc:[A-Z]{2}$/.test(scope)) { where.push('v.country = ?'); params.push(scope.slice(3)); }
@@ -173,6 +174,18 @@ function ranking(period, scope) {
   const result = { rows, total, byId: new Map(rows.map((r) => [r.id, r])) };
   rankCache.set(key, result);
   return result;
+}
+
+// Manşet: bu ay, bu yıl ve tüm zamanların 1.si ile bir önceki dönemin 1.si
+function leaders() {
+  const m = monthKey(), y = m.slice(0, 4);
+  const top = (period) => { const t = ranking(period, 'world').rows[0]; return t ? { id: t.id, name: t.name, league: t.league, votes: t.votes } : null; };
+  return {
+    month: m,
+    thisMonth: top(m), lastMonth: top(prevMonthKey(m)),
+    thisYear: top(y), lastYear: top(String(Number(y) - 1)),
+    allTime: top('all'), beforeMonth: top('before:' + m),
+  };
 }
 
 function clubStats(clubId, country) {
@@ -352,6 +365,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/movers' && req.method === 'GET') return send(res, 200, movers());
+    if (p === '/api/leaders' && req.method === 'GET') return send(res, 200, leaders());
 
     if (p === '/api/periods' && req.method === 'GET') {
       const months = db.prepare('SELECT DISTINCT month FROM votes ORDER BY month DESC').all().map((r) => r.month);

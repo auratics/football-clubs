@@ -202,11 +202,11 @@
 
   async function refreshHome() {
     const [lead, mv] = await Promise.all([
-      api(`/api/rankings?period=${S.month}&limit=1`),
+      api('/api/leaders'),
       api('/api/movers'),
       loadTables(true),
     ]);
-    renderLead(lead.rows[0]);
+    renderLeaders(lead);
     S.movers = mv;
     renderMovers();
   }
@@ -215,8 +215,7 @@
   function setupTableFilter() {
     const seen = new Set();
     const countries = S.leagues.filter((l) => !seen.has(l.cc) && seen.add(l.cc));
-    const mine = S.me.country !== 'ZZ' ? `<option value="cc:${esc(S.me.country)}">Votes from ${esc(regionName(S.me.country))}</option>` : '';
-    $('tableCountry').innerHTML = '<option value="">All countries</option>' + mine +
+    $('tableCountry').innerHTML = '<option value="">All countries</option>' +
       countries.map((l) => `<option value="${esc(l.cc)}">${esc(l.country)}</option>`).join('');
     $('tableCountry').onchange = () => { fillTableLeagues(); loadTables(true); };
     $('tableLeague').onchange = () => loadTables(true);
@@ -228,13 +227,12 @@
     const cc = $('tableCountry').value;
     $('tableLeague').innerHTML = '<option value="">All leagues</option>' + S.leagues.filter((l) => l.cc === cc)
       .map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
-    $('tableLeague').disabled = !cc || cc.startsWith('cc:');
+    $('tableLeague').disabled = !cc;
   }
   function tableScope() {
     const cc = $('tableCountry').value, league = $('tableLeague').value;
     if (league) return 'league:' + league;
     if (!cc) return 'world';
-    if (cc.startsWith('cc:')) return cc;
     const leagues = S.leagues.filter((l) => l.cc === cc);
     return leagues.length === 1 ? 'league:' + leagues[0].id : 'country:' + cc;
   }
@@ -251,20 +249,27 @@
     $('tableShare').hidden = !r.rows.length;
   }
 
-  // Ayın 1. sırası manşet olur
-  function renderLead(first) {
-    const name = $('leadName');
-    if (!first) {
-      name.className = '';
-      name.textContent = 'Nobody yet';
-      $('leadDeck').textContent = 'The table is empty. Be the first to vote this month.';
-      return;
-    }
-    name.className = first.name.length > 16 ? 'long' : '';
-    name.innerHTML = `<button>${esc(first.name)}</button>`;
-    name.firstChild.onclick = () => openClub(first.id);
-    $('leadDeck').textContent = `${fmt(first.votes)} vote${first.votes === 1 ? '' : 's'} and counting this month.`;
+  // Manşet: bu ay, bu yıl ve tüm zamanların 1.si; altında bir önceki dönemin 1.si
+  function renderLeaders(L) {
+    const year = S.month.slice(0, 4);
+    const votes = (c) => `${fmt(c.votes)} vote${c.votes === 1 ? '' : 's'}`;
+    const card = (cls, kick, cur, deck, prevLabel, prev) => `
+      <article class="leader ${cls}${cur ? '' : ' empty'}">
+        <span class="kick">${kick}</span>
+        <h2 class="${cls === 'main' && cur && cur.name.length > 16 ? 'long' : ''}">${cur ? `<button data-id="${cur.id}">${esc(cur.name)}</button>` : 'Nobody yet'}</h2>
+        <p class="deck">${cur ? deck(cur) : 'No votes yet. Be the first!'}</p>
+        <p class="prev">${prevLabel}: ${prev ? `<button data-id="${prev.id}">${esc(prev.name)}</button> · ${votes(prev)}` : 'no votes'}</p>
+      </article>`;
+    $('leaders').innerHTML =
+      card('main', "This month's worst offender", L.thisMonth, (c) => `${votes(c)} and counting this month.`,
+        `Last month (${monthName(prevMonth(S.month)).split(' ')[0]})`, L.lastMonth) +
+      `<div class="side-leaders">` +
+      card('', `Worst of ${year}`, L.thisYear, (c) => `${votes(c)} this year.`, `Last year (${Number(year) - 1})`, L.lastYear) +
+      card('', 'Worst of all time', L.allTime, (c) => `${votes(c)} in total.`, 'Before this month', L.beforeMonth) +
+      `</div>`;
+    $('leaders').querySelectorAll('button[data-id]').forEach((b) => (b.onclick = () => openClub(Number(b.dataset.id))));
   }
+  const prevMonth = (m) => { const d = new Date(m + '-15T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); };
 
   // ---------- Yükselenler / düşenler ----------
   let mvTab = 'risers';
@@ -301,11 +306,6 @@
     let cc = '', league = '';
     if (scope.startsWith('league:') && S.leagueById[scope.slice(7)]) { league = scope.slice(7); cc = S.leagueById[league].cc; }
     else if (scope.startsWith('country:') && S.leagues.some((l) => l.cc === scope.slice(8))) cc = scope.slice(8);
-    else if (/^cc:[A-Z]{2}$/.test(scope)) {
-      // "Votes from X" yalnızca ziyaretçinin kendi ülkesi için listelenir; başka ülkeden gelen paylaşım linki de açılabilsin.
-      if (![...$('tableCountry').options].some((o) => o.value === scope)) $('tableCountry').add(new Option(`Votes from ${regionName(scope.slice(3))}`, scope), 1);
-      cc = scope;
-    }
     $('tableCountry').value = cc;
     fillTableLeagues();
     if (league && S.leagues.filter((l) => l.cc === cc).length > 1) $('tableLeague').value = league;
