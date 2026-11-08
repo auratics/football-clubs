@@ -45,8 +45,7 @@
   function ranking(period, scope) {
     const counts = new Map();
     for (const v of allVotes()) {
-      if (period.startsWith('before:')) { if (v.month >= period.slice(7)) continue; }
-      else if (period !== 'all' && !(period.length === 4 ? v.month.startsWith(period + '-') : v.month === period)) continue;
+      if (period !== 'all' && !(period.length === 4 ? v.month.startsWith(period + '-') : v.month === period)) continue;
       if (scope.startsWith('cc:') && v.country !== scope.slice(3)) continue;
       if (scope.startsWith('league:') && v.league !== scope.slice(7)) continue;
       if (scope.startsWith('country:') && leagueCc[v.league] !== scope.slice(8)) continue;
@@ -88,6 +87,25 @@
     return { month: CURRENT, prev: monthsBack(1), risers, fallers, trending };
   }
 
+  // server.js'teki previousLeader ile aynı mantık
+  function previousLeader() {
+    const months = [...new Set(allVotes().map((v) => v.month))].sort();
+    const total = new Map();
+    let holder = null, holderUntil = null, previous = null;
+    for (const m of months) {
+      for (const v of allVotes()) if (v.month === m) total.set(v.club, (total.get(v.club) || 0) + v.n);
+      let best = null;
+      for (const [id, votes] of total) {
+        const name = clubById.get(id).name;
+        if (!best || votes > best.votes || (votes === best.votes && name < best.name)) best = { id, name, league: clubById.get(id).league, votes };
+      }
+      if (holder && best.id !== holder.id) previous = { id: holder.id, name: holder.name, league: holder.league, until: holderUntil };
+      if (!holder || best.id !== holder.id) holder = best;
+      holderUntil = m;
+    }
+    return previous;
+  }
+
   function route(url, opts = {}) {
     const p = url.pathname, q = url.searchParams;
     if (p.endsWith('/api/clubs')) {
@@ -125,7 +143,7 @@
       const top = (period) => { const t = ranking(period, 'world').rows[0]; return t ? { id: t.id, name: t.name, league: t.league, votes: t.votes } : null; };
       const y = CURRENT.slice(0, 4);
       return [200, { month: CURRENT, thisMonth: top(CURRENT), lastMonth: top(monthsBack(1)), thisYear: top(y), lastYear: top(String(Number(y) - 1)),
-        allTime: top('all'), beforeMonth: top('before:' + CURRENT) }];
+        allTime: top('all'), previousLeader: previousLeader() }];
     }
     if (p.endsWith('/api/periods')) {
       const months = [0, 1, 2, 3].map(monthsBack);

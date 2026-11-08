@@ -250,28 +250,32 @@
   }
 
   // Manşet: bu ay, bu yıl ve tüm zamanların 1.si; altında bir önceki dönemin 1.si
+  // Yıl, tüm zamanlar ve "geçen ay / geçen yıl / önceki lider" satırları şimdilik gizli. Açmak için true yap.
+  const SHOW_HISTORY = false;
   function renderLeaders(L) {
     const year = S.month.slice(0, 4);
     const votes = (c) => `${fmt(c.votes)} vote${c.votes === 1 ? '' : 's'}`;
     // Telefonda kısa etiket ve kısa satır, geniş ekranda uzunları görünür.
-    const card = (cls, kick, short, cur, more, prevLabel, prev) => `
+    const card = (cls, kick, short, cur, more, prevLabel, prev, prevExtra = votes, extraOnPhone = false) => `
       <article class="leader ${cls}${cur ? '' : ' empty'}">
         <span class="kick"><span class="wide-only">${kick}</span><span class="narrow-only">${short}</span></span>
         <h2 class="${cur && cur.name.length > 16 ? 'long' : ''}" style="--w:${cur ? Math.max(...cur.name.split(' ').map((w) => w.length)) : 10}">${cur ? `<button data-id="${cur.id}">${esc(cur.name)}</button>` : 'Nobody yet'}</h2>
         <p class="deck">${cur ? `${votes(cur)}<span class="wide-only"> ${more}</span>` : 'No votes yet'}</p>
-        <p class="prev">${prevLabel}: ${prev ? `<button data-id="${prev.id}">${esc(prev.name)}</button><span class="wide-only"> · ${votes(prev)}</span>` : 'no votes'}</p>
+        ${SHOW_HISTORY ? '' : '<!--'}<p class="prev">${prevLabel}: ${prev ? `<button data-id="${prev.id}">${esc(prev.name)}</button><span class="${extraOnPhone ? 'prev-extra' : 'wide-only'}"><span class="wide-only"> · </span>${prevExtra(prev)}</span>` : prevExtra(null)}</p>${SHOW_HISTORY ? '' : '-->'}
       </article>`;
     $('leaders').innerHTML =
       card('main', "This month's worst offender", 'This month', L.thisMonth, 'and counting this month.',
-        `Last month<span class="wide-only"> (${monthName(prevMonth(S.month)).split(' ')[0]})</span>`, L.lastMonth) +
-      `<div class="side-leaders">` +
-      card('', `Worst of ${year}`, year, L.thisYear, 'this year.', `Last year<span class="wide-only"> (${Number(year) - 1})</span>`, L.lastYear) +
-      card('', 'Worst of all time', 'All time', L.allTime, 'in total.', 'Before this month', L.beforeMonth) +
-      `</div>
-      <div class="lead-actions">
+        `Last month<span class="wide-only"> (${monthName(prevMonth(S.month)).split(' ')[0]})</span>`, L.lastMonth, (c) => (c ? votes(c) : 'no votes')) +
+      (SHOW_HISTORY ? `<div class="side-leaders">` +
+      card('', `Worst of ${year}`, year, L.thisYear, 'this year.', `Last year<span class="wide-only"> (${Number(year) - 1})</span>`, L.lastYear, (c) => (c ? votes(c) : 'no votes')) +
+      card('', 'Worst of all time', 'All time', L.allTime, 'in total.', 'Previous leader', L.previousLeader,
+        (c) => (c ? `until ${monthName(c.until)}` : 'none yet'), true) +
+      `</div>` : '') +
+      `<div class="lead-actions">
         <a class="btn" href="#vote">Vote now</a>
         <a class="btn ghost" href="#tables">See the results</a>
       </div>`;
+    $('leaders').classList.toggle('single', !SHOW_HISTORY);
     $('leaders').querySelectorAll('button[data-id]').forEach((b) => (b.onclick = () => openClub(Number(b.dataset.id))));
   }
   const prevMonth = (m) => { const d = new Date(m + '-15T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); };

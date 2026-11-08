@@ -75,7 +75,8 @@ Küçük bir VPS (ör. Hetzner, ayda ~4 €) da olur. Ayarlar aynı; `node serve
 1. AdSense seni onaylamadan önce alan adı olan, yayında bir site ister. Sitede gizlilik sayfası (`/privacy`) zaten var.
 2. Onaylandıktan sonra:
    - AdSense'in verdiği `<script>` satırını `public/index.html` dosyasında `<head>` içinde işaretli yere yapıştır.
-   - İki `<div class="ad" ...>Advertisement</div>` kutusunu AdSense reklam birimleriyle değiştir.
+   - Reklam alanları şu an sayfada yok. AdSense reklam birimlerini `public/index.html` içinde istediğin yere koy (ör. tablonun altına ve "On the move" bölümünün altına); `.ad` sınıfının stili `style.css` içinde hazır.
+   - `public/privacy.html` dosyasına reklam çerezlerini anlatan bir "Advertising" bölümü geri ekle (AdSense bunu ister).
    - AdSense'in verdiği satırı `public/ads.txt` dosyasına ekle.
 3. Avrupa'daki (AB/İngiltere) ziyaretçiler için Google **çerez onay penceresi** şart koşuyor. **AdSense → Gizlilik ve mesajlaşma** bölümünden ücretsiz onay mesajını (CMP) aç; kodda değişiklik gerekmez.
 

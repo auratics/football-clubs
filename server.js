@@ -152,7 +152,6 @@ function ranking(period, scope) {
   if (period === 'all') { /* hepsi */ }
   else if (/^\d{4}$/.test(period)) { where.push('v.month LIKE ?'); params.push(period + '-%'); }
   else if (/^\d{4}-\d{2}$/.test(period)) { where.push('v.month = ?'); params.push(period); }
-  else if (/^before:\d{4}-\d{2}$/.test(period)) { where.push('v.month < ?'); params.push(period.slice(7)); } // o aya kadarki tüm zamanlar
   else return null;
   if (scope === 'world') { /* hepsi */ }
   else if (/^cc:[A-Z]{2}$/.test(scope)) { where.push('v.country = ?'); params.push(scope.slice(3)); }
@@ -184,8 +183,30 @@ function leaders() {
     month: m,
     thisMonth: top(m), lastMonth: top(prevMonthKey(m)),
     thisYear: top(y), lastYear: top(String(Number(y) - 1)),
-    allTime: top('all'), beforeMonth: top('before:' + m),
+    allTime: top('all'), previousLeader: previousLeader(),
   };
+}
+
+// Şu anki tüm zamanlar liderinden önce 1. sırada duran kulüp ve son lider olduğu ay
+function previousLeader() {
+  if (rankCache.has('prevLeader')) return rankCache.get('prevLeader');
+  const rows = db.prepare(`SELECT v.month, c.id, c.name, c.league_id AS league, COUNT(*) AS n
+    FROM votes v JOIN clubs c ON c.id = v.club_id GROUP BY v.month, c.id ORDER BY v.month`).all();
+  const total = new Map();
+  let holder = null, holderUntil = null, previous = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const t = total.get(r.id) || { id: r.id, name: r.name, league: r.league, votes: 0 };
+    t.votes += r.n; total.set(r.id, t);
+    if (rows[i + 1] && rows[i + 1].month === r.month) continue; // ayın sonuna kadar topla
+    let best = null;
+    for (const c of total.values()) if (!best || c.votes > best.votes || (c.votes === best.votes && c.name < best.name)) best = c;
+    if (holder && best.id !== holder.id) previous = { id: holder.id, name: holder.name, league: holder.league, until: holderUntil };
+    if (!holder || best.id !== holder.id) holder = best;
+    holderUntil = r.month;
+  }
+  rankCache.set('prevLeader', previous);
+  return previous;
 }
 
 function clubStats(clubId, country) {
